@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+/*
+ * Brand color tokens — single source of truth for "red" on the homepage.
+ *
+ * Anchored to Tailwind's stock `red` scale (600 = #dc2626) because the
+ * Navbar, Footer, Products, and About pages already use `red-*` classes —
+ * keeping the same hex by default means the new minimalist homepage stays
+ * visually consistent with the rest of the site out of the box.
+ *
+ * To try a different red (e.g. crimson #DC143C or a warmer #E63946), edit
+ * `--color-brand-600` below and, if you want the tints/shades to stay
+ * tonally consistent, run the new hex through a shade generator (e.g.
+ * https://uicolors.app/create) and paste in the resulting 50–900 steps.
+ * Every `brand-*` utility class (bg-brand-600, text-brand-700, ...) in
+ * Home.jsx and its sub-components will pick up the change immediately.
+ */
+@theme {
+  --color-brand-50: #fef2f2;
+  --color-brand-100: #fee2e2;
+  --color-brand-200: #fecaca;
+  --color-brand-300: #fca5a5;
+  --color-brand-400: #f87171;
+  --color-brand-500: #ef4444;
+  --color-brand-600: #dc2626;
+  --color-brand-700: #b91c1c;
+  --color-brand-800: #991b1b;
+  --color-brand-900: #7f1d1d;
+}
+
+/*
+ * Continuous brand-strip scroll. Translates by -50% because the strip
+ * renders two back-to-back copies of the same item list, so the halfway
+ * point lines up seamlessly with the start for a gap-free loop.
+ * Speed is controlled where this is used (see Marquee.jsx) via the
+ * Tailwind arbitrary duration in the `animate-[marquee_Ns_linear_infinite]`
+ * class — raise `Ns` to slow it down, lower it to speed it up.
+ */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Gentle entrance used by the scroll-reveal hook (see useInViewport.js). */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Subtle idle float for the hero product image — barely-there, not a bounce. */
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/*
+ * Accessibility safety net: if the OS/browser reports a preference for
+ * reduced motion, kill all animation/transition duration outright. This
+ * is a CSS-level backstop — useReducedMotion.js additionally lets
+ * components skip motion-only logic (e.g. the marquee's duplicated
+ * track) at the JS level so we're not just freezing a mid-animation frame.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
