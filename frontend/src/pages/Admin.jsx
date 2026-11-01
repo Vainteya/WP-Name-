@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { BACKEND_URL } from '../utils/backend';
 import { CATEGORIES_DATA } from '../utils/categoryData';
 import { Trash2, Edit, Plus, LogOut, Package, AlertCircle } from 'lucide-react';
 
-const MAX_FILE_BYTES = 10 * 1024 * 1024; // keep in sync with backend/middleware/upload.js
+// 4MB per file, 4MB per request: Vercel rejects request bodies over 4.5MB.
+const MAX_FILE_BYTES = 4 * 1024 * 1024; // keep in sync with backend/middleware/upload.js
 const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
 
 const EMPTY_FORM = { name: '', brand: 'Paramount', category: CATEGORIES_DATA[0].name, image: null, pdf: null };
@@ -37,7 +39,7 @@ export default function Admin() {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
-  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const backendUrl = BACKEND_URL;
 
   const fetchProducts = async () => {
     try {
@@ -116,7 +118,7 @@ export default function Admin() {
       if (!ACCEPTED_IMAGE_TYPES.includes(formData.image.type)) {
         next.image = 'Only .png or .jpg image files are allowed.';
       } else if (formData.image.size > MAX_FILE_BYTES) {
-        next.image = 'Image is too large (10MB max).';
+        next.image = 'Image is too large (4MB max).';
       }
     }
 
@@ -124,7 +126,9 @@ export default function Admin() {
       if (formData.pdf.type !== 'application/pdf') {
         next.pdf = 'Only .pdf files are allowed for the datasheet.';
       } else if (formData.pdf.size > MAX_FILE_BYTES) {
-        next.pdf = 'Datasheet is too large (10MB max).';
+        next.pdf = 'Datasheet is too large (4MB max).';
+      } else if (formData.image && formData.image.size + formData.pdf.size > MAX_FILE_BYTES) {
+        next.pdf = 'Image and datasheet together must be under 4MB.';
       }
     }
 

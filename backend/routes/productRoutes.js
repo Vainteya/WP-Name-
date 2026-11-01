@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const fs = require('fs');
 const multer = require('multer');
 const Product = require('../models/Product');
 const { protect } = require('../middleware/auth');
 const upload = require('../middleware/upload');
+const { persistUploadedFiles, removeStoredFile } = require('../utils/storage');
 
 const productUpload = upload.fields([{ name: 'image', maxCount: 1 }, { name: 'pdf', maxCount: 1 }]);
 
@@ -13,14 +13,25 @@ const productUpload = upload.fields([{ name: 'image', maxCount: 1 }, { name: 'pd
 // shape as our own validation, instead of crashing to a raw 500 or an
 // unhandled exception that skips the route handler entirely.
 function withProductUpload(req, res, next) {
-  productUpload(req, res, (err) => {
-    if (!err) return next();
+  productUpload(req, res, async (err) => {
+    if (!err) {
+      try {
+        await persistUploadedFiles(req.files);
+        return next();
+      } catch (uploadErr) {
+        console.error('File storage error:', uploadErr);
+        return res.status(500).json({
+          message: 'Upload failed',
+          errors: { form: 'Could not store the uploaded files. Please try again.' },
+        });
+      }
+    }
 
     if (err instanceof multer.MulterError) {
       const field = err.field || 'form';
       const message =
         err.code === 'LIMIT_FILE_SIZE'
-          ? 'File is too large (10MB max).'
+          ? 'File is too large (4MB max).'
           : err.code === 'LIMIT_UNEXPECTED_FILE'
           ? 'Unexpected file field.'
           : err.message;
@@ -146,21 +157,9 @@ router.delete('/:id', protect, async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    // Safely remove files from disk if they exist
-    if (product.imagePath && fs.existsSync(product.imagePath)) {
-      try {
-        fs.unlinkSync(product.imagePath);
-      } catch (err) {
-        console.error('Error removing image file:', err);
-      }
-    }
-    if (product.pdfPath && fs.existsSync(product.pdfPath)) {
-      try {
-        fs.unlinkSync(product.pdfPath);
-      } catch (err) {
-        console.error('Error removing PDF file:', err);
-      }
-    }
+    // Remove stored files (local disk or Vercel Blob) if they exist
+    await removeStoredFile(product.imagePath);
+    await removeStoredFile(product.pdfPath);
 
     await Product.findByIdAndDelete(req.params.id);
     res.json({ message: 'Product and associated files removed' });
