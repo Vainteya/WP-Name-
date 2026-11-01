@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { BACKEND_URL } from '../utils/backend';
 import { useSearchParams } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import DivisionCard from '../components/DivisionCard';
@@ -42,7 +43,7 @@ export default function Products() {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        let url = `${import.meta.env.VITE_BACKEND_URL}/api/products?brand=${targetBrand}`;
+        let url = `${BACKEND_URL}/api/products?brand=${targetBrand}`;
         if (activeCategory !== 'All') {
           url += `&category=${encodeURIComponent(activeCategory)}`;
         }

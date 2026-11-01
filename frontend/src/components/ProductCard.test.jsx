@@ -28,7 +28,7 @@ describe('ProductCard', () => {
     const product = { ...baseProduct, pdfPath: 'uploads/pdfs/relay.pdf' };
     render(<ProductCard product={product} />);
     const link = screen.getByRole('link', { name: /download datasheet/i });
-    expect(link).toHaveAttribute('href', `${import.meta.env.VITE_BACKEND_URL}/uploads/pdfs/relay.pdf`);
+    expect(link).toHaveAttribute('href', `${(import.meta.env.VITE_BACKEND_URL ?? '')}/uploads/pdfs/relay.pdf`);
     expect(link).toHaveAttribute('target', '_blank');
   });
 

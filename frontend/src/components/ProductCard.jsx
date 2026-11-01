@@ -1,13 +1,9 @@
 import { Download } from 'lucide-react';
 import FallbackImage from './FallbackImage';
+import { assetUrl } from '../utils/backend';
 
 export default function ProductCard({ product }) {
-  const backendUrl = import.meta.env.VITE_BACKEND_URL;
-
-  const imageSrc =
-    product.imagePath?.startsWith('http') || product.imagePath?.startsWith('/images')
-      ? product.imagePath
-      : `${backendUrl}/${product.imagePath}`;
+  const imageSrc = assetUrl(product.imagePath);
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-brand-200 hover:shadow-xl hover:shadow-gray-200/60">
@@ -31,7 +27,7 @@ export default function ProductCard({ product }) {
 
         {product.pdfPath && (
           <a
-            href={`${backendUrl}/${product.pdfPath}`}
+            href={assetUrl(product.pdfPath)}
             target="_blank"
             rel="noreferrer"
             className="mt-5 flex items-center gap-2 border-t border-gray-100 pt-4 text-sm font-medium text-gray-500 transition-colors duration-200 hover:text-brand-600"

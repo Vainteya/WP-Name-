@@ -1,13 +1,16 @@
 const multer = require('multer');
-const path = require('path');
+const fs = require('fs');
+const { useBlob } = require('../utils/storage');
 
-const storage = multer.diskStorage({
+// 4MB per file — Vercel functions reject request bodies over 4.5MB.
+// Keep in sync with the frontend's client-side check (MAX_FILE_BYTES).
+const MAX_FILE_BYTES = 4 * 1024 * 1024;
+
+const diskStorage = multer.diskStorage({
   destination: function (req, file, cb) {
-    if (file.mimetype === 'application/pdf') {
-      cb(null, 'uploads/pdfs/');
-    } else {
-      cb(null, 'uploads/images/');
-    }
+    const dir = file.mimetype === 'application/pdf' ? 'uploads/pdfs/' : 'uploads/images/';
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
   },
   filename: function (req, file, cb) {
     cb(null, `${Date.now()}-${file.originalname}`);
@@ -23,8 +26,8 @@ const fileFilter = (req, file, cb) => {
 };
 
 const upload = multer({
-  storage,
+  storage: useBlob() ? multer.memoryStorage() : diskStorage,
   fileFilter,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB per file — keep in sync with the frontend's client-side check
+  limits: { fileSize: MAX_FILE_BYTES },
 });
 module.exports = upload;
